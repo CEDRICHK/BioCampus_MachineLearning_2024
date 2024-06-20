@@ -1,0 +1,5 @@
+Image	Object type	Name	Num Detections	Num KI67+	Num KI67-
+Ki67-Lung-1.czi	Root object (Image)		3069	283	2786
+Ki67-Lung-2.czi	Root object (Image)		2923	212	2711
+Ki67-Lung-3.czi	Root object (Image)		3225	197	3028
+Ki67-Lung-4.czi	Root object (Image)		2013	123	1890

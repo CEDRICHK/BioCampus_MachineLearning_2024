@@ -1,0 +1,232 @@
+---
+title: "Cellprofiler and Cellprofiler Analyst Practical"
+author: "Cédric Hassen-Khodja, Volker Baeker, Clément Benedetti, Thibault Odor"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Materials
+
+You will analyze images of cells in a standard 384-well plate. However, you will focus on a subset of these images. These images are located in ./exercises/CP-CPA/images.
+A text file named **BBBC022_v1_image_subset.csv** is provided, indicating the location of the wells on the plate and the cell treatment. This file is located in ./exercises/CP-CPA/metadata.
+
+## 2. Exercise: Using the CellProfiler software to identify features and obtain measurements from cellular images
+
+1. Start `CellProfiler` by double-clicking the desktop icon ![]("./icon/favicon.png"){width=5%}.
+
+2. Import the file named **CellPainting.cppipe** (located in ./exercises/CP-CPA/pipeline) by clicking on `Import > Pipeline from File...`.
+
+![Import Pipeline from File]("./figures/cp-import.png")
+
+\newpage
+
+3. Within the interface, there's a "Drop files and folders here" section, part of the `Images` module's main interface. Drag the *images* folder into this section. Your files from this folder will then be visible.
+
+![Drop images]("./figures/cp-images.png")
+
+\newpage
+
+4. Open the `Metadata` module, the second in the Input module panel. This module extracts details from image filenames. Click the magnifying glass icon ![]("./icon/glass.png"){width=3%} near *Regular expression*. A dialog will open for regular expression comparison. The regular expression is :   
+
+^.\*\_(?P\<Well\>[A-P][0-9]{2})_s(?P\<Site\>[0-9])_w(?P\<ChannelNumber\>[0-9]).\*
+
+After setting up, click `Submit`.   
+
+Click on `Add another extraction method` to extract plate information with `Folder name` as *Metadata source*. The regular expression is:   
+
+.\*\_images\_(?P\<Plate\>[0-9]{5}).\*   
+
+For the third metadata extraction, navigate to the metadata folder and select the **BBBC022_v1_image_subset.csv** file.   
+Back in the `Metadata` module, click `Update`. You'll see columns in the Metadata window. Ensure that *Well*, *Plate* and *Site* matches in both the *CSV Metadata* and *Image Metadata* dropdowns.
+
+![Metadata module]("./figures/cp-metadata.png")
+
+\newpage
+
+5. Click on the `NamesAndTypes` module, which is the third module in the Input module panel.
+This module allows you to assign a meaningful name to each image by which other modules will refer to it. Note how the images are assigned to channels: images containing "1" in their file name are assigned to the name "Hoechst", those with "2" are assigned "ER", those with "3" are assigned "Syto", those with "4" are assigned "Ph_golgi" and those with "5" are assigned "Mito".   
+Set Image set matching method to “Metadata”: Select `Plate` in all columns. Do the same for `Well` and `Site`. 
+
+Click the `Update` button below the divider to display a table that shows each channel pair matched up for the 81 wells in the assay.
+
+![NamesAndTypes module]("./figures/cp-namesandtypes.png")
+
+\newpage
+
+6. Click on the `ExportToDatabase` module to save measurements to a database. This allows CellProfiler Analyst to retrieve the data. Check the following parameters:
+
+- Set the *Database type* to "SQLite".
+- Enable "Yes" for *Create a CellProfiler Analyst properties file*.
+- Choose "Nuclei" for *Which objects should be used for locations?*.
+- Select "384" for *Select the plate type*.
+- For *plate and well metadata*, choose "Plate" and "Well" respectively.
+- Set *Output file location* to "Default Output Folder."
+- Enable *Write image thumbnails directly to database?* and select "ER", "Hoechst", "Mito", "Ph_golgi" and "Syto" using Ctrl-click (Windows) or Command-click (Mac).   
+   
+  Leave other settings at their default values.
+
+![ExportToDatabase module]("./figures/cp-export.png")
+
+The settings for the CellProfiler pipeline have been pre-selected to optimize the analysis of the given images, making the pipeline ready for processing the full set of images.
+
+7. For a more efficient run, hide all module display windows by choosing “Hide All Windows on run” from the *Windows* menu. The “eyeball” icons next to the modules will switch from open (![]("./icon/eyeball-open.png"){width=3%}) to closed (![]("./icon/eyeball-close.png"){width=3%}). This speeds up the process as CellProfiler won't need to generate and display each module's window.   
+Save Your pipeline by selecting `File > Save Project As...`, name the pipeline, and save it for future reference.
+Start the analysis of all images by clicking the `Analyze images` button. If using Windows, you may need to allow network access for CellProfiler.exe. Once started, the analysis of all images will take a few minutes to complete.
+
+\newpage
+
+## 3. Exercise: Using the CellProfiler Analyst software to visualize the data and classify cells
+
+You're ready to use CellProfiler Analyst (CPA) to delve into the data collected from the cell images.
+
+1. To launch CPA, double-click its desktop icon ![]("./icon/cpa.png"){width=5%}. Upon starting, CPA will prompt you to select a properties file. Choose the **DefaultDB.properties** file from the Default Output Folder, which the `ExportToDatabase` module from CellProfiler created.
+- This properties file is crucial as it contains the configurations for CPA to interface with the database created by CellProfiler, which includes measurements from the images and their locations on your hard drive.
+- Remember, if you move the database file, you must update the properties file to reflect the new location of the database.
+
+![Select properties file]("./figures/cpa-properties.png")
+
+2. **Visualizing the measurements in a 384-well plate layout view.**
+
+CPA offers a variety of data display tools, including a plate layout view for multi-well plate data, like the 384-well plate used in this assay.
+
+- To access this view, click the `Plate Viewer` icon ![]("./icon/cpa-plate.png"){width=5%} in CPA's main window. This displays a 384-well plate layout where colored squares represent wells with data, and crossed-out wells lack data. In this case, 3 wells have data. Hover over the wells to see tooltips with per-well values.
+
+- Change **Number of plates** to 3, since we have used three plates in this experiment and want to visualize them at the same time.
+
+- Initially, the color coding shows the image index, which isn't relevant for our analysis. Change the measurement view to "Image_Count_Cells" to visualize a specific measurement: The wells have the
+following treatments:
+  - K16: **negative controls (no drug) or mock treated**.
+  - G18: **Treated with berberine chloride**.
+  - P20: **Treated with rapamycin**.
+
+![Plate Viewer]("./figures/cpa-plateViewer.png")
+
+  - For *per-object measurements*, set the Data Source to “Per-object” and choose a measurement like “Nuclei_Intensity_IntegratedIntensity_Syto”.
+    
+    - Do we have homogeneous values or heterogeneous values for this measure?
+    - If heterogeneous what are the wells that have the lowest values?
+  
+  - The Plate Viewer will show an **aggregate statistic** for these per-object measurements in each well, which you can adjust by selecting a different “Aggregation method.”
+  - To view **image thumbnails** in the Plate Viewer, select “thumbnail” under *Well display*. This replaces the colored squares with thumbnails of the original images.
+
+Keep the Plate Viewer open as you'll need it for further steps in the exercise.
+
+3. **Classifying the cells' phenotypes with CPA's Classifier**
+
+CellProfiler Analyst's Classifier is a machine-learning tool used to automatically distinguish different cell phenotypes. In this exercise, you'll train the Classifier to recognize phenotypic changes induced by the two drug treatments.   
+
+- Click the `Classifier` icon in CPA ![]("./icon/cpa-classifier.png"){width=5%} to open the interface.
+- we want to explore three phenotypes: **negative**, **reduced_nucleolar_size**, and **redistribution_of_mitochondria**.
+Right click in the `positive` window and select *Rename class*. Write **reduced_nucleolar_size** (no
+spaces) as the new class name. Then press the `Add new class` button in the bottom right corner and write **redistribution_of_mitochondria** as the new class name.
+- Press the `Fetch!` button to load a default set of cell images (usually 20) for classification. Thumbnails of cells will populate the "unclassified" panel.
+- In the top menu bar, it is possible to select which color channel (or None) to use for the display of different images. For this exercise, the most important images are **Syto** and **Mito**. Select your preferred colors for those two channels, e.g., Green and Red, and select *None* for the other images.
+- Drag and drop cells into the "reduced_nucleolar_size" bin, as shown here ![]("./figures/cpa-reduced.png"){width=40%}.
+- Drag cells into the "negative" bin, as shown here ![]("./figures/cpa-negatives.png"){width=40%}.
+- Similarly, drag cells into the "redistribution_of_mitochondria" bin, as shown here ![]("./figures/cpa-redistrib.png"){width=40%}.
+
+![The Classifier interface]("./figures/cpa-classifier.png")
+
+- Once you have at least 5 cells in each bin, click `Train Classifier`.
+  - If the initial batch doesn't have 5 clearly definable cells in each class, use “Fetch!” again until you do.
+  - The training set you create by sorting these cells will vary since the images are randomly sampled. Consequently, the training and resulting classifications will differ among users. This set of sorted cells is known as the **training set**.
+  
+4. **Reviewing the rules that CPA established (based on your training set) to classify positive and negative cells**
+
+In this exercise, you'll evaluate the criteria that CellProfiler Analyst (CPA) uses to distinguish different phenotypes, derived from the training set you created.
+
+- By default, it displays the top 5 features.
+
+  - Write down the top 5 features.
+
+- If you do not have interesting features, you can add more images to each bin and start the training again.
+
+5. **Reviewing the accuracy of the classification with the confusion matrix**
+
+you'll assess the precision of your classifier by using a **confusion matrix**. This matrix helps verify how well the classifier's rules, which were developed during training, can predict the actual classification of each cell in your training set. CPA accomplishes this by applying the rules to each cell's data to predict if it's positive or negative and then checks these predictions against your initial categorization.
+
+- To visualize the classifier's performance, click the `Evaluate` button. This action will produce a confusion matrix that plots the true classifications you assigned against the predicted ones made by CPA.
+
+  - How accurate is your classification after adding only a few cells to your training set?
+
+![The Confusion matrix]("./figures/cpa-confusionmat.png"){width=80%}
+
+  - Remember, the confusion matrix reflects the classifier's accuracy on the training set, not the entire dataset. Even if the matrix shows a high level of accuracy, it's essential to test the classifier on a broader range of data to ensure it's reliable for scoring your entire experiment.
+  
+6. **Refining the training set by obtaining samples from specific wells**
+
+if you know which images are likely to contain the phenotype, you can manually select cells from those images.
+
+- Launch the `Plate Viewer` and navigate to well *K16*, which contains a negative control. Open an image from this well by double-clicking on it.
+- In the image, identify a cell that lacks the phenotype (negative) and drag it into the negative bin. Do this for *five such cells*.
+- Follow the same process for *P20* (a well containing cells treated with rapamycin), where you'll find "reduced_nucleolar_size" phenotypes. Do the same for *G18* (a well containing cells treated with berberine chloride), dropping the cells into the “redistribution_of_mitochondria” bin.
+- After you've selected five cells for each category, click the `Train classifier` button to update your classifier with these new examples.
+
+7. **Refining the training set by correcting misclassified cells in an image**
+
+- Open an image by double-clicking on a **thumbnail** of a cell in the bins.
+- Once the image is open, go to the menu and select `Classify` followed by `Classify Image` to initiate the classification process.
+- The cells in the image will be **color-coded** based on their classification according to the current rules.
+  - For Windows users, to understand what each color represents, click on the `Show controls >>` button at the bottom of the window to display the color legend.
+  - For Mac users, go to the image menu, select `View` then choose `View cell classes as numbers` for a numerical representation. To interpret what each number signifies, click the `Show controls >>` button to bring up the numbered class list.
+- Identify and select up to **five cells** that have been *incorrectly classified*. Click and drag each one into the correct bin.
+- After reclassifying any mislabeled cells, click the `Train classifier` button to update the classifier with these corrections.
+
+![Classification of objects into image]("./figures/cpa-misclassified.png"){width=80%}
+
+\newpage
+
+8. **Refining the training set by fetching positive and negative cells**
+
+- Adjust the number of cells to fetch by changing the value next to `Fetch` from *20* to *5*.
+- In the fetch controls, click the `random` drop-down box and select *positive*.
+- Press the `Fetch!` button to collect samples that the computer identifies as positive cells, based on the existing rules.
+- Review the fetched cells:
+   - For correctly identified positive cells (true positives), move them to the positive bin.
+   - For incorrectly identified negative cells (false positives), move them to the negative bin.
+- If uncertain about a cell's classification, select it and press `Delete` to exclude it from your training set.
+- Continue this process until you have a minimum of **20 cells** in each bin.
+- Click the `Train classifier` button to update the classifier.
+
+  - Has the accuracy of the model increased ? If not, go back to the first step and repeat, until
+the classifier displays the desired level of accuracy.
+
+![The Confusion matrix after refining the training]("./figures/cpa-confusionmatfinal.png"){width=80%}
+
+\newpage
+
+9. **Applying the classifier to the entire dataset:**
+
+- Once satisfied with the classifier's accuracy, initiate the **scoring** of the entire dataset by clicking the `Score all` button.
+- In the dialog box that appears, confirm the default settings by clicking `OK` to start the scoring process. The classifier will evaluate each cell in every image as either positive or negative.
+- A summary window, known as the **Hit table**, will appear, showing the scores for each image. It includes the total count of cells and the number of cells classified in the different classes, along with the **enrichment score** for each.
+- To organize the data, click on the `Enriched Score positive` column header. Adjust the window size if necessary to view this column.
+- Sort the scores in *descending order* to have the highest enrichment scores at the top of the list.
+- To view the image with the highest enrichment score, double-click the asterisk (*) next to the "ImageNumber" in the first row.
+
+This process allows you to view the images corresponding to the most enriched scores, which can provide insights into the accuracy and effectiveness of your classifier across the dataset.
+
+![Hit table]("./figures/cpa-score.png")
+
+- You can also save your training set and/or classifer model for future reference or to make changes later; do so by going to `File > Save Training Set` or `File > Save Classifier Model`.
+
+\newpage
+
+10. **Storing and Visualizing Classification Scores**
+
+After scoring your experiment, save the results to the measurement database for future visualization with CellProfiler Analyst's (CPA) tools.
+
+- In the "Hit table" window, go to the menu and select `File`, then **Save table to database**. When asked for a table name, type in **HitTable** and choose to *save it permanently*.
+- Access the Plate Viewer in CPA and set the "Data source" to "*OTHER TABLE*."
+- When prompted, select the "HitTable" from the list of tables.
+- For the table type, choose "per-well" and then link the hit table to the image measurements table by matching the columns:
+   - Match "Image_Metadata_Plate" with itself.
+   - Match "Image_Metadata_Well" with itself.
+- Open a new Plate Viewer and from the Measurement dropdown, select "pEnriched_reduced_nucleolar_size" to display the enrichment scores in the context of the plate layout.
+  - What does this correspondence (or lack thereof) tell you about the classifier?
+- A strong match may indicate a successful classification, while discrepancies could suggest areas for improvement or further investigation.
+
+![Plate Viewer wuth Enrichment scores]("./figures/cpa-result1.png"){width=55%} ![Plate Viewer wuth Enrichment scores]("./figures/cpa-result2.png"){width=55%}

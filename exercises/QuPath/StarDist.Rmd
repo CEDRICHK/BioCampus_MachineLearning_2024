@@ -1,0 +1,37 @@
+---
+title: "Cell detection using StarDist"
+author: "Cédric Hassen-Khodja, Volker Baeker, Clément Benedetti, Thibault Odor"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A key feature of the QuPath cell detection algorithm is its ability to optionally expand the detected objects (usually nuclei) by a predefined value or until they touch a neighboring cell. This geometric approximation allows for the inference of the whole cell based solely on the nuclear signal.
+
+This capability is also implemented in deep learning-based cell segmentation, which utilizes external software and is integrated as extensions (QuPath's term for plugins).
+
+<u>StarDist</u>, developed by Martin Weigert and Uwe Schmidt, provides excellent 2D and 3D nuclei segmentation. It is available as a Python library and a Fiji plugin, and has also been incorporated into QuPath as an **extension**. StarDist includes a robust 2D pre-trained model and offers a comprehensive set of tools for retraining when needed.
+
+## 1. Install StarDist Extension
+
+- Find the jar file StarDist in the *Extensions* folder, drag & drop it into QuPath window.
+
+- Choose to install in the *default* folder.
+
+- Check the ***Extensions*** to verify that StarDist extension (0.4.0) is included.
+
+## 2. Create Annotation
+
+- Create Annotation of the whole image using ***Objects > Annotations > Create full image annotation*** (Ctrl+Shit+A)
+
+## 3. Run StarDist
+
+- StarDist cannot be run through QuPath GUI but only using a Script. For example, you can use ***Extensions > StarDist H&E nucleus detection script***
+
+- Edit the path the to model file in the *models* folder.
+
+- Click Run
+
+![Export measurements tool]("./figures/stardist-script.png")

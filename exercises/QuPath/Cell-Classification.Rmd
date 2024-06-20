@@ -1,0 +1,247 @@
+---
+title: "Lung Ki67 Cell Classification with QuPath"
+author: "Cédric Hassen-Khodja, Volker Baeker, Clément Benedetti, Thibault Odor"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This tutorial guides you through the analysis of lung tissue cells stained for Ki67 using QuPath, focusing on classifying cells based on Ki67 expression.
+
+## 1. Materials.
+
+- **Software**: QuPath (latest version)
+- **Dataset**: Lung tissue images stained for Ki67
+- **Additional**: Java installed for running QuPath scripts
+
+## 2. Exercise 1: Create Project and Import Images
+
+### Creating a QuPath project.
+
+- Use ***File > Project … > Create project*** , this will prompt you to select an empty folder or
+- Create an empty folder (eg under your QuPath folder) and drag and drop it into QuPath
+
+![Select an empty folder]("./figures/qupath-project.png")
+
+\newpage
+
+
+### Import your images.
+
+- Drag and drop the images into QuPath (from QuPath/images folder) or
+- Click on Add Images and select the desired files
+Use the following settings:
+
+![Import your images]("./figures/qupath-import.png")
+
+\newpage
+
+## 3. Exercise 2: Stain Deconvolution
+
+### Estimate Stain Vectors:
+
+- Create a small rectangle over background pixels, double-click on the background.
+
+![Deconvolution background]("./figures/qupath-deconvolution_background.png")
+
+- Move to an area with clear examples of Hematoxylin and DAB.
+
+- ***Analyze > Processing > Estimate stain vectors***. 
+
+- When prompted, select NO for using modal value.
+
+\newpage
+
+### Adjust Stain Vectors:
+
+- Original stain vectors might be far from the data.
+
+![Stain editor]("./figures/qupath-stain_editor.png")
+
+- Set **Max OD** to 2 and **Ignore extrema** to 2%. 
+
+- Click **Auto**; the stain vectors should now better with the data.
+
+- If satisfied, press **OK** and name your new stain vectors.
+
+![Stain deconvolution]("./figures/qupath-deconvolution_stain.png")
+
+\newpage
+
+### Verify Separation:
+
+- Use ***View > Brightness/Contrast*** (Shift+C) or ***View > Show channel viewer*** to verify good separation.
+
+![Brightness/Contrast tool and channel viewer]("./figures/qupath-BC_CV.png")
+
+\newpage
+
+## 4. Exercise 3: Annotate the Main Region of Interest
+
+### Annotation Tools:
+
+- **Rectangle Tool**: For annotating rectangular regions. Useful for large, uniform areas.
+- **Polygon Tool**: For annotating irregular regions. Useful for precise annotations around complex structures.
+- **Brush Tool**: For freehand annotations. Useful for detailed and small regions.
+- **Wand Tool**: For automatic annotations based on color similarity. Useful for quick annotations of homogenous areas.
+
+### Draw Annotations:
+
+- Draw a generous annotation around the region of interest using the annotation tools.
+
+- Ensure it includes both tumor and non-tumor cells.
+
+
+## 5. Exercise 4: Cell Detection
+
+### Cell Detection:
+
+- With the annotation selected, go to `Analyze > Cell detection > cell detection`.
+- **Choose the Detection Channel**: Select the appropriate channel for nucleus detection (e.g., Hematoxylin).
+- **Adjust the Parameters**:
+    - **Requested pixel size**: Adjust to match the image resolution (e.g., 0.5 µm). Larger numbers result in faster but less accurate processing.
+    - **Background radius**: Size of the filter for subtracting background from the detection image. Should be slightly larger than the largest nucleus.
+    - **Median filter radius**: Apply a median smoothing filter with the chosen radius before nucleus detection (0 = no filter).
+    - **Sigma**: Apply a Gaussian smoothing filter with the chosen radius before nucleus detection (0 = no filter).
+    - **Minimum and Maximum area**: Smallest and largest objects that can be considered nuclei. Objects outside this range are discarded.
+    - **Threshold**: Nucleus detection threshold after background removal and smoothing. Lower values detect more objects, higher values reduce false positives.
+    - **Maximum background intensity**: Regions with background intensity higher than this threshold are discarded as noise/artifacts.
+    - **Split by shape**: Separates nuclei that are relatively round. Usually checked.
+    - **Exclude DAB (membrane staining)**: Check if DAB staining is on the cell membrane, not applicable for nuclear Ki67.
+    - **Cell expansion**: Distance to expand nuclei outlines to define cell boundaries.
+    - **Include cell nucleus**: Keeps the nucleus included in the cell boundary.
+    - **Smooth boundaries**: Smooths cell boundaries for better results, usually checked.
+    - **Make measurements**: Enable for further processing on the cells after detection.
+
+\newpage
+
+![Cell detection image result]("./figures/qupath-cell_detection.png")
+
+- After you are satisfied with *the cell detection parameters*, you can delete the rectangle and the descendent cells. Draw a new box elsewhere in the image and double-check that the optimized parameters are still sufficiently accurate.
+
+- If you are working with a cropped portion of a slide (as in this example), use ***Objects > Annotations > Create full image annotation***.
+
+- Go to the workflow tab, and find the last (most recent) time in the command history you ran *cell detection*. Double-clicking that will open up the cell detection box, with all of the parameters you set the last time you ran it. 
+
+- Hit “Run” and it will detect cells in the entire image with the last settings. If you do not have the annotation selected, it will confirm that you want to process the annotation. This may take a few minutes.
+
+\newpage
+
+## 6. Exercise 5: View Cell Measurements
+
+### Individual cell measurement:
+
+- Double click on a cell.
+
+- Inspect the different cell measurements in the lower left panel of the Annotation Tab.
+
+### Annotations Table:
+
+- Click on the Table icon and open the Annotations table.
+
+![Annotation measurements]("./figures/qupath-annotation_table.png")
+
+### Detection Table:
+
+- Click on the Table icon and open the Detections table.
+
+- Sort it by a feature.
+
+- Show Histograms of intensity values of a selected feature.
+
+### Measurement Map:
+
+- ***Measure > Show measurement maps*** to show the spatial distribution of different features.
+
+![Measurement maps tool]("./figures/qupath-measurement_map.png")
+
+\newpage
+
+## 7. Exercise 6: Cell classification with Machine learning based classifier
+
+You can classify a cell using multiple measurements by training a machine-learning object classifier. In this case you are annotating few cells that are belonging to that class and few cells that are not belonging
+to that class, and QuPath automatically extract the relevant combination of measurements to determine whether this cells belong to that class or not.
+
+#### Annotate classes.
+
+- Select a channel to work on: eg DAB and show it.
+
+- Add *KI67-* and  *KI67+* Classes.
+
+- Use the **point tool**.
+
+    - Use the Add button to add classes.
+    - On right-cick, select *Set Classification* to set the class types.
+
+![Point tool]("./figures/qupath-point_tool.png")
+
+\newpage
+
+### Train Cell Classifier.
+
+- After you selected multiple examples start an object classifier with ***Classify > Object classification > Train object classifier*** (Ctrl+Shit+D).
+
+- **Set Classifier parameters:**
+
+- Object filter = Cells,
+
+- Classifier = Random Trees,
+
+- Features = selected measurements and select
+    - All shape features,
+    - All Intensity features of the relevant channels for the classifier.
+    
+- Classes = selected classes, select KI67+ and KI67-.
+
+- Training = points only.
+
+- Click on *Live update*.
+ 
+- Inspect results and make Corrections – add points for falsely classified cells,
+
+- Make sure to save intermediate annotations + classifiers
+    - Save points from counting window – all points , name it KI67_points_vN.
+    - Save classifier – from Train object classifier window KI67_ML_vN.
+    - Use meaningful classifiers names. consider using Date within the classifier name.
+    - Keep vN matched between annotations and classifier, as you can load then later on, and undo options are limited for points.
+    - Increase the version vN each time you save
+
+## 8. Exercise 7: Apply the same workflow to other images
+
+- To create a script, choose Create a workflow from the workflow tab. A window appears with a list of processing steps.
+
+- Keep the parameter that gives the best results and delete the others.
+
+- Click on Create script, and save the results using File -> save.
+
+- Apply the script to other images using Automate -> show script editor -> Run for project.
+
+![Workflow & Script]("./figures/qupath-workflow.png")
+
+\newpage
+
+## 9. Exercise 8: Export Results
+
+### Export measurements
+There are 3 different ways to export measurements within QuPath, via:
+
+- The *measurement table* use the Save button at the lower right side.
+
+- The *measurement exporter*.
+
+- A script: see [QuPath Doc](https://qupath.readthedocs.io/en/latest/docs/tutorials/exporting_measurements.html).
+
+Here we will use the second one
+
+- Make sure all the images are saved.
+
+- ***Measure > Export Measurements***
+    - Select the measurement type to be exported.
+    
+    - If you don’t want all the data, Use Populate to select the columns to be included.
+
+- Inspect the exported files.
+
+![Export measurements tool]("./figures/qupath-export.png")
